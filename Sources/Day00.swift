@@ -5,21 +5,58 @@ struct Day00: AdventDay {
   var data: String
 
   // Splits input data into its component parts and convert from string.
-  var entities: [[Int]] {
-    data.split(separator: "\n\n").map {
-      $0.split(separator: "\n").compactMap { Int($0) }
-    }
+  var lines: [Substring] {
+    data.split(separator: "\n")
   }
 
   // Replace this with your solution for the first part of the day's challenge.
   func part1() -> Any {
-    // Calculate the sum of the first set of input data
-    entities.first?.reduce(0, +) ?? 0
+    lines
+      .reduce(into: 0) { sum, line in
+        let first: Int? = line.first(where: { $0.isNumber }).flatMap { Int("\($0)") }
+        let last: Int? = line.last(where: { $0.isNumber }).flatMap { Int("\($0)") }
+        guard let first, let last else { return }
+        sum += first * 10 + last
+      }
   }
 
   // Replace this with your solution for the second part of the day's challenge.
   func part2() -> Any {
-    // Sum the maximum entries in each set of data
-    entities.map { $0.max() ?? 0 }.reduce(0, +)
+    let indexedSearchTerms = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+      .indexed()
+
+    return lines
+      .reduce(into: Int(0)) { (sum: inout Int, line: Substring) in
+        var first: Int?
+        for c in line.indexed() {
+          if c.element.isNumber {
+            first = Int("\(c.element)")
+            break
+          }
+          let match = indexedSearchTerms
+            .filter { $0.element.first == c.element }
+            .first(where: { line[c.index...].hasPrefix($0.element) })
+          if let match {
+            first = match.index + 1
+            break
+          }
+        }
+        var last: Int?
+        for c in line.indexed().reversed() {
+          if c.element.isNumber {
+            last = Int("\(c.element)")
+            break
+          }
+          let match = indexedSearchTerms
+            .filter { $0.element.last == c.element }
+            .first(where: { line[...c.index].hasSuffix($0.element) })
+          if let match {
+            last = match.index + 1
+            break
+          }
+        }
+        guard let first, let last else { return }
+        sum += first * 10 + last
+      }
   }
 }
