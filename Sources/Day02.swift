@@ -101,11 +101,9 @@ struct CountingParser<Child>: Parser where Child: Parser, Child.Input == Substri
   }
 
   func parse(_ input: inout Child.Input) throws -> (Int, Child.Output) {
-    var copy = input
-    let result = try child.parse(&copy)
-    let length = input.count - copy.count
-    input = copy
-    return (length, result)
+      let original = input
+      let result = try self.child.parse(&input)
+      return (original[..<input.startIndex].count, result)
   }
 }
 
