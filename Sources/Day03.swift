@@ -5,58 +5,7 @@ struct Day03: AdventDay {
   // Save your data in a corresponding text file in the `Data` directory.
   var data: String
 
-  var parsed: [([Int], [Int])] {
-    let lineParser = Parse(input: Substring.self) {
-      Skip {
-        Prefix(while: { $0 != ":" })
-        ":"
-        Many {
-          " "
-        }
-      }
-      Many(
-        element: {
-          Digits()
-        },
-        separator: {
-          Many {
-            " "
-          }
-        },
-        terminator: {
-          " |"
-          Many {
-            " "
-          }
-        }
-      )
-      Many(
-        element: {
-          Digits()
-        },
-        separator: {
-          Many {
-            " "
-          }
-        }
-      )
-    }
-
-    let dataParser = Parse {
-      Many {
-        lineParser
-      } separator: {
-        "\n"
-      } terminator: {
-        OneOf {
-          "\n"
-          ""
-        }
-      }
-    }
-
-    return try! dataParser.parse(data)
-  }
+  var parsed: [([Int], [Int])] { try! Parsers.day03.parse(data) }
 
   // Replace this with your solution for the first part of the day's challenge.
   func part1() -> Any {
@@ -87,5 +36,56 @@ struct Day03: AdventDay {
     }
 
     return parsed.indices.reduce(into: 0, { $0 += countCard(at: $1) })
+  }
+}
+
+private extension Parsers {
+  static let line = Parse(input: Substring.self) {
+    Skip {
+      Prefix(while: { $0 != ":" })
+      ":"
+      Many {
+        " "
+      }
+    }
+    Many(
+      element: {
+        Digits()
+      },
+      separator: {
+        Many {
+          " "
+        }
+      },
+      terminator: {
+        " |"
+        Many {
+          " "
+        }
+      }
+    )
+    Many(
+      element: {
+        Digits()
+      },
+      separator: {
+        Many {
+          " "
+        }
+      }
+    )
+  }
+
+  static let day03 = Parse {
+    Many {
+      line
+    } separator: {
+      "\n"
+    } terminator: {
+      OneOf {
+        "\n"
+        ""
+      }
+    }
   }
 }

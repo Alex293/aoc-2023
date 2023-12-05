@@ -15,52 +15,7 @@ struct Day01: AdventDay {
     case red, green, blue
   }
 
-  var parsed: [Line] {
-    let draw = Many(into: Line.Draw()) { $0[$1.0] = $1.1 }
-      element: {
-        OneOf {
-          for color in Color.allCases {
-            Parse(input: Substring.self) {
-              " "
-              Int.parser()
-              " \(color.rawValue)"
-            }
-            .map { (color, $0) }
-          }
-        }
-      }
-      separator: {
-        ","
-      }
-
-    let line = Parse(input: Substring.self) {
-      Line(id: $0, draws: $1)
-    } with: {
-      "Game "
-      Int.parser()
-      ":"
-      Many {
-        draw
-      } separator: {
-        ";"
-      }
-    }
-
-    let dataParser = Parse(input: Substring.self) {
-      Many {
-        line
-      } separator: {
-        "\n"
-      } terminator: {
-        OneOf {
-          "\n"
-          ""
-        }
-      }
-    }
-
-    return try! dataParser.parse(data[...])
-  }
+  var parsed: [Line] { try! Parsers.day01.parse(data[...]) }
 
   // Replace this with your solution for the first part of the day's challenge.
   func part1() -> Any {
@@ -92,5 +47,50 @@ struct Day01: AdventDay {
           }
         sum += maxs.0 * maxs.1 * maxs.2
       }
+  }
+}
+
+private extension Parsers {
+  static let draw = Many(into: Day01.Line.Draw()) { $0[$1.0] = $1.1 }
+    element: {
+      OneOf {
+        for color in Day01.Color.allCases {
+          Parse(input: Substring.self) {
+            " "
+            Int.parser()
+            " \(color.rawValue)"
+          }
+          .map { (color, $0) }
+        }
+      }
+    }
+    separator: {
+      ","
+    }
+
+  static let line = Parse(input: Substring.self) {
+    Day01.Line(id: $0, draws: $1)
+  } with: {
+    "Game "
+    Int.parser()
+    ":"
+    Many {
+      draw
+    } separator: {
+      ";"
+    }
+  }
+
+  static let day01 = Parse(input: Substring.self) {
+    Many {
+      line
+    } separator: {
+      "\n"
+    } terminator: {
+      OneOf {
+        "\n"
+        ""
+      }
+    }
   }
 }

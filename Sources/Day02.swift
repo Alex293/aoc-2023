@@ -12,45 +12,7 @@ struct Day02: AdventDay {
   }
 
   var parsed: [(match: Match, line: Int, index: Int)] {
-    let lineParser = Parse {
-      Many {
-        CountingParser {
-          OneOf {
-            Prefix(1..., while: { $0 == "." })
-              .map { Match.dots(count: $0.count) }
-            Digits()
-              .map { Match.number($0) }
-            Prefix(1, while: { !($0.isNumber || $0 == "." || $0.isNewline || $0.isWhitespace) })
-              .map { Match.symbol(isGear: $0 == "*") }
-          }
-        }
-      }
-    }
-
-    let dataParser = Parse {
-      Many {
-        lineParser
-      } separator: {
-        "\n"
-      } terminator: {
-        OneOf {
-          "\n"
-          ""
-        }
-      }
-      .map {
-        $0.indexed().flatMap { line in
-          line.element
-            .reduce(into: (0, [(match: Match, line: Int, index: Int)]())) { res, sub in
-              res.1.append((match: sub.1, line: line.index, index: res.0))
-              res.0 += sub.0
-            }
-            .1
-        }
-      }
-    }
-
-    return try! dataParser.parse(data)
+    try! Parsers.day02.parse(data)
   }
 
   // Replace this with your solution for the first part of the day's challenge.
@@ -90,23 +52,6 @@ struct Day02: AdventDay {
   }
 }
 
-struct CountingParser<Child>: Parser where Child: Parser, Child.Input == Substring {
-  typealias Input = Child.Input
-  typealias Output = (Int, Child.Output)
-
-  let child: Child
-
-  init(@ParserBuilder<Input> _ build: () -> Child) {
-    self.child = build()
-  }
-
-  func parse(_ input: inout Child.Input) throws -> (Int, Child.Output) {
-      let original = input
-      let result = try self.child.parse(&input)
-      return (original[..<input.startIndex].count, result)
-  }
-}
-
 extension Int {
   var length: Int {
     var count = 0
@@ -120,4 +65,62 @@ extension Int {
     }
     return count
   }
+}
+
+private extension Parsers {
+  static let line = Parse {
+    Many {
+      CountingParser {
+        OneOf {
+          Prefix(1..., while: { $0 == "." })
+            .map { Day02.Match.dots(count: $0.count) }
+          Digits()
+            .map { Day02.Match.number($0) }
+          Prefix(1, while: { !($0.isNumber || $0 == "." || $0.isNewline || $0.isWhitespace) })
+            .map { Day02.Match.symbol(isGear: $0 == "*") }
+        }
+      }
+    }
+  }
+
+  static let day02 = Parse {
+    Many {
+      line
+    } separator: {
+      "\n"
+    } terminator: {
+      OneOf {
+        "\n"
+        ""
+      }
+    }
+    .map {
+      $0.indexed().flatMap { line in
+        line.element
+          .reduce(into: (0, [(match: Day02.Match, line: Int, index: Int)]())) { res, sub in
+            res.1.append((match: sub.1, line: line.index, index: res.0))
+            res.0 += sub.0
+          }
+          .1
+      }
+    }
+  }
+
+  struct CountingParser<Child>: Parser where Child: Parser, Child.Input == Substring {
+    typealias Input = Child.Input
+    typealias Output = (Int, Child.Output)
+
+    let child: Child
+
+    init(@ParserBuilder<Input> _ build: () -> Child) {
+      self.child = build()
+    }
+
+    func parse(_ input: inout Child.Input) throws -> (Int, Child.Output) {
+      let original = input
+      let result = try self.child.parse(&input)
+      return (original[..<input.startIndex].count, result)
+    }
+  }
+
 }
