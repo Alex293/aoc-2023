@@ -52,45 +52,4 @@ final class Day04Tests: XCTestCase {
     let challenge = Day04(data: testData)
     XCTAssertEqual(String(describing: challenge.part2()), "46")
   }
-
-//  func testReduction() throws {
-//    let first = [
-//      0:2,
-//      3:4,
-//      12:9,
-//    ]
-//
-//    let second = [
-//      2:3,
-//      4:5,
-//      6:8
-//    ]
-//
-//    let res = [Int: Int].init(reducing: [first, second])
-//    XCTAssertEqual(res, [
-//      0:3,
-//      3:5,
-//      12:9,
-//      6:8,
-//    ])
-//  }
 }
-
-//extension [Int: Int] {
-//  init(reducing maps: [Self]) {
-//    self = maps
-//      .dropFirst()
-//      .reduce(into: maps.first!) { res, map in
-//        var tmp = map
-//        for (key, value) in res {
-//          if tmp.keys.contains(value) {
-//            res[key] = tmp[value]
-//            tmp.removeValue(forKey: value)
-//          }
-//        }
-//        for (key, value) in tmp {
-//          res[key] = value
-//        }
-//      }
-//  }
-//}
