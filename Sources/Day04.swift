@@ -56,17 +56,18 @@ struct Day04: AdventDay {
           .lazy
           .map { seed in
             almanac.reduce(into: seed) { res, map in
-              res = map.firstNonNil { $0.value(res) } ?? res
+              if let newValue = map.firstNonNil({ $0.value(res) }) {
+                res = newValue
+              }
             }
           }
-          .min() ?? Int.max
+          .min()
       }
     }
 
     var min = Int.max
     for task in tasks {
-      let value = await task.value
-      if value < min {
+      if let value = await task.value, value < min {
         min = value
       }
     }
