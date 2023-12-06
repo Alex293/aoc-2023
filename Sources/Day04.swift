@@ -47,28 +47,36 @@ struct Day04: AdventDay {
     }
 
     let (seedRanges, almanac) = try! parser.parse(data)
-    let mappedRanges = seedRanges.map { ($0.0..<($0.0+$0.1)) }
 
-    return try await parallelTasks(
-      iterations: mappedRanges.count,
-      concurrency: 8
-    ) { (i: Int) -> Int in
-      mappedRanges[i]
-        .lazy
-        .compactMap { seed in
-          almanac.reduce(into: seed) { res, map in
-            res = map.firstNonNil { $0.value(res) } ?? res
+    let seedChunks = seedRanges.flatMap { $0.lazy.chunks(ofCount: 10_000) }
+
+    let tasks = seedChunks.map { chunk in
+      Task {
+        chunk
+          .lazy
+          .map { seed in
+            almanac.reduce(into: seed) { res, map in
+              res = map.firstNonNil { $0.value(res) } ?? res
+            }
           }
-        }
-        .min() ?? .max
+          .min() ?? Int.max
+      }
     }
-    .min()! as Int
+
+    var min = Int.max
+    for task in tasks {
+      let value = await task.value
+      if value < min {
+        min = value
+      }
+    }
+    return min
   }
 }
 
 private extension Parsers {
 
-  static let seedRanges = Parse(input: Substring.self) {
+  static let seedRanges = Parse(input: Substring.self, { $0.map( { ($0..<($0+$1)) }) }) {
     Skip { "seeds: " }
     Many {
       Digits()
@@ -121,31 +129,5 @@ private extension Parsers {
       "\n\n"
     }
     Skip { Optionally { "\n" } }
-  }
-}
-
-func parallelTasks<T>(
-  iterations: Int,
-  concurrency: Int,
-  block: @escaping ((Int) async throws -> T)
-) async throws -> [T] {
-  try await withThrowingTaskGroup(of: T.self) { group in
-    var result: [T] = []
-
-    for i in 0..<iterations {
-      if i >= concurrency {
-        if let res = try await group.next() {
-          result.append(res)
-        }
-      }
-      group.addTask {
-        try await block(i)
-      }
-    }
-
-    for try await res in group {
-      result.append(res)
-    }
-    return result
   }
 }
